@@ -7,22 +7,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔍 특정 학번 조회
-async function fetchStudentStats() {
-  const studentId = document.getElementById("searchId").value.trim();
-  const tbody = document.querySelector("#logTable tbody");
-  const summary = document.getElementById("summary");
-  tbody.innerHTML = "";
-  summary.innerHTML = "";
-
-  if (!studentId) return alert("학번을 입력하세요.");
-
-  let totalGames = 0, wins = 0, draws = 0, losses = 0;
-  let totalReward = 0, totalCharged = 0, totalUsed = 0, totalWithdrawn = 0;
-
-  // 게임 로그 조회
+  // 🔍 게임 로그 조회 (학번 prefix 검색 + 시간 내림차순)
   const gameSnapshot = await db.collection("gameLogs")
-    .where("studentId", "==", studentId)
+    .where("studentId", ">=", studentId)
+    .where("studentId", "<=", studentId + "\uf8ff")
+    .orderBy("studentId")
+    .orderBy("time", "desc")
     .get();
 
   gameSnapshot.forEach(doc => {
@@ -47,9 +37,12 @@ async function fetchStudentStats() {
     }
   });
 
-  // 코인 로그 조회
+  // 🔍 코인 로그 조회 (학번 prefix 검색 + 시간 내림차순)
   const coinSnapshot = await db.collection("coinLogs")
-    .where("studentId", "==", studentId)
+    .where("studentId", ">=", studentId)
+    .where("studentId", "<=", studentId + "\uf8ff")
+    .orderBy("studentId")
+    .orderBy("time", "desc")
     .get();
 
   coinSnapshot.forEach(doc => {
@@ -72,6 +65,7 @@ async function fetchStudentStats() {
     <p>사용: ${totalUsed} | 보상: ${totalReward} | 충전: ${totalCharged} | 출금: ${totalWithdrawn}</p>
   `;
 }
+
 
 // 🏆 명예의 전당 카드 표시
 function renderHallOfFame(top3) {
