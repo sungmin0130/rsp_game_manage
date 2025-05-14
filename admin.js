@@ -7,35 +7,19 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-  // 🔍 게임 로그 조회 (학번 prefix 검색 + 시간 내림차순)
-  const gameSnapshot = await db.collection("gameLogs")
-    .where("studentId", ">=", studentId)
-    .where("studentId", "<=", studentId + "\uf8ff")
-    .orderBy("studentId")
-    .orderBy("time", "desc")
-    .get();
+// 🔍 특정 학번 조회
+async function fetchStudentStats() {
+  const studentId = document.getElementById("searchId").value.trim();
+  const tbody = document.querySelector("#logTable tbody");
+  const summary = document.getElementById("summary");
+  tbody.innerHTML = "";
+  summary.innerHTML = "";
 
-  gameSnapshot.forEach(doc => {
-    const d = doc.data();
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${new Date(d.time).toLocaleString()}</td>
-                     <td>${d.type}</td>
-                     <td>${d.result || d.reward || '-'}</td>`;
-    tbody.appendChild(row);
+  if (!studentId) return alert("학번을 입력하세요.");
 
-    if (d.type === "게임결과") {
-      totalGames++;
-      if (d.result.includes("이겼")) wins++;
-      else if (d.result.includes("무승부")) draws++;
-      else losses++;
-    }
-    if (d.type === "보상") {
-      totalReward += parseInt(d.reward?.replace("X", "")) || 0;
-    }
-    if (d.type === "게임시작") {
-      totalUsed++;
-    }
-  });
+  let totalGames = 0, wins = 0, draws = 0, losses = 0;
+  let totalReward = 0, totalCharged = 0, totalUsed = 0, totalWithdrawn = 0;
+  
 
   // 🔍 코인 로그 조회 (학번 prefix 검색 + 시간 내림차순)
   const coinSnapshot = await db.collection("coinLogs")
