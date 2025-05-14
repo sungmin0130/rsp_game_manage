@@ -7,22 +7,25 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔍 특정 학번 조회
+// 🔍 특정 학번 조회 (studentIdOnly 사용)
 async function fetchStudentStats() {
-  const studentId = document.getElementById("searchId").value.trim();
+  const search = document.getElementById("searchId").value.trim();
   const tbody = document.querySelector("#logTable tbody");
   const summary = document.getElementById("summary");
   tbody.innerHTML = "";
   summary.innerHTML = "";
 
-  if (!studentId) return alert("학번을 입력하세요.");
+  if (!search) return alert("학번을 입력하세요.");
 
   let totalGames = 0, wins = 0, draws = 0, losses = 0;
   let totalReward = 0, totalCharged = 0, totalUsed = 0, totalWithdrawn = 0;
 
-  // 게임 로그 조회
+  // 게임 로그 조회 (시간 내림차순)
   const gameSnapshot = await db.collection("gameLogs")
-    .where("studentId", "==", studentId)
+    .where("studentIdOnly", ">=", search)
+    .where("studentIdOnly", "<=", search + "\uf8ff")
+    .orderBy("studentIdOnly")
+    .orderBy("time", "desc")
     .get();
 
   gameSnapshot.forEach(doc => {
@@ -47,9 +50,12 @@ async function fetchStudentStats() {
     }
   });
 
-  // 코인 로그 조회
+  // 코인 로그 조회 (시간 내림차순)
   const coinSnapshot = await db.collection("coinLogs")
-    .where("studentId", "==", studentId)
+    .where("studentIdOnly", ">=", search)
+    .where("studentIdOnly", "<=", search + "\uf8ff")
+    .orderBy("studentIdOnly")
+    .orderBy("time", "desc")
     .get();
 
   coinSnapshot.forEach(doc => {
@@ -204,7 +210,7 @@ function downloadRanking() {
   XLSX.writeFile(wb, "사용자_랭킹.xlsx");
 }
 
-// 자동 갱신
+// ⏱️ 자동 갱신 (1분마다)
 setInterval(() => {
   if (document.getElementById("startDate").value && document.getElementById("endDate").value) {
     generateRanking();
